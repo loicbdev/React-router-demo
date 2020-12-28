@@ -1,74 +1,153 @@
+import "./packages/react-router-dom/examples/Animation/styles.css";
 import React from "react";
 import {
+  TransitionGroup,
+  CSSTransition
+} from "react-transition-group";
+import {
   BrowserRouter as Router,
+  Switch,
+  Route,
   Link,
-  useLocation
+  Redirect,
+  useLocation,
+  useParams
 } from "react-router-dom";
 
-// React Router does not have any opinions about
-// how you should parse URL query strings.
-//
-// If you use simple key=value query strings and
-// you do not need to support IE 11, you can use
-// the browser's built-in URLSearchParams API.
-//
-// If your query strings contain array or object
-// syntax, you'll probably need to bring your own
-// query parsing function.
-
-export default function QueryParamsExample() {
+export default function AnimationExample() {
   return (
     <Router>
-      <QueryParamsDemo />
+      <Switch>
+        <Route exact path="/">
+          <Redirect to="/hsl/10/90/50" />
+        </Route>
+        <Route path="*">
+          <AnimationApp />
+        </Route>
+      </Switch>
     </Router>
   );
 }
 
-// A custom hook that builds on useLocation to parse
-// the query string for you.
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
-}
-
-function QueryParamsDemo() {
-  let query = useQuery();
+function AnimationApp() {
+  let location = useLocation();
 
   return (
-    <div>
-      <div>
-        <h2>Accounts</h2>
-        <ul>
-          <li>
-            <Link to="/account?name=netflix">Netflix</Link>
-          </li>
-          <li>
-            <Link to="/account?name=zillow-group">Zillow Group</Link>
-          </li>
-          <li>
-            <Link to="/account?name=yahoo">Yahoo</Link>
-          </li>
-          <li>
-            <Link to="/account?name=modus-create">Modus Create</Link>
-          </li>
-        </ul>
+    <div style={styles.fill}>
+      <ul style={styles.nav}>
+        <NavLink to="/hsl/10/90/50">Red</NavLink>
+        <NavLink to="/hsl/120/100/40">Green</NavLink>
+        <NavLink to="/rgb/33/150/243">Blue</NavLink>
+        <NavLink to="/rgb/240/98/146">Pink</NavLink>
+      </ul>
 
-        <Child name={query.get("name")} />
+      <div style={styles.content}>
+        <TransitionGroup>
+          {/*
+            This is no different than other usage of
+            <CSSTransition>, just make sure to pass
+            `location` to `Switch` so it can match
+            the old location as it animates out.
+          */}
+          <CSSTransition
+            key={location.key}
+            classNames="fade"
+            timeout={300}
+          >
+            <Switch location={location}>
+              <Route path="/hsl/:h/:s/:l" children={<HSL />} />
+              <Route path="/rgb/:r/:g/:b" children={<RGB />} />
+            </Switch>
+          </CSSTransition>
+        </TransitionGroup>
       </div>
     </div>
   );
 }
 
-function Child({ name }) {
+function NavLink(props) {
   return (
-    <div>
-      {name ? (
-        <h3>
-          The <code>name</code> in the query string is &quot;{name}
-          &quot;
-        </h3>
-      ) : (
-        <h3>There is no name in the query string</h3>
-      )}
+    <li style={styles.navItem}>
+      <Link {...props} style={{ color: "inherit" }} />
+    </li>
+  );
+}
+
+function HSL() {
+  let { h, s, l } = useParams();
+
+  return (
+    <div
+      style={{
+        ...styles.fill,
+        ...styles.hsl,
+        background: `hsl(${h}, ${s}%, ${l}%)`
+      }}
+    >
+      hsl({h}, {s}%, {l}%)
     </div>
   );
 }
+
+function RGB() {
+  let { r, g, b } = useParams();
+
+  return (
+    <div
+      style={{
+        ...styles.fill,
+        ...styles.rgb,
+        background: `rgb(${r}, ${g}, ${b})`
+      }}
+    >
+      rgb({r}, {g}, {b})
+    </div>
+  );
+}
+
+const styles = {};
+
+styles.fill = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0
+};
+
+styles.content = {
+  ...styles.fill,
+  top: "40px",
+  textAlign: "center"
+};
+
+styles.nav = {
+  padding: 0,
+  margin: 0,
+  position: "absolute",
+  top: 0,
+  height: "40px",
+  width: "100%",
+  display: "flex"
+};
+
+styles.navItem = {
+  textAlign: "center",
+  flex: 1,
+  listStyleType: "none",
+  padding: "10px"
+};
+
+styles.hsl = {
+  ...styles.fill,
+  color: "white",
+  paddingTop: "20px",
+  fontSize: "30px"
+};
+
+styles.rgb = {
+  ...styles.fill,
+  color: "white",
+  paddingTop: "20px",
+  fontSize: "30px"
+};
