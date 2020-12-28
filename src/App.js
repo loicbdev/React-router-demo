@@ -3,77 +3,94 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link,
-  Redirect,
-  useParams,
-  useRouteMatch
+  Link
 } from "react-router-dom";
 
-// Sometimes you don't know all the possible routes
-// for your application up front; for example, when
-// building a file-system browsing UI or determining
-// URLs dynamically based on data. In these situations,
-// it helps to have a dynamic router that is able
-// to generate routes as needed at runtime.
-//
-// This example lets you drill down into a friends
-// list recursively, viewing each user's friend list
-// along the way. As you drill down, notice each segment
-// being added to the URL. You can copy/paste this link
-// to someone else and they will see the same UI.
-//
-// Then click the back button and watch the last
-// segment of the URL disappear along with the last
-// friend list.
+// Each logical "route" has two components, one for
+// the sidebar and one for the main area. We want to
+// render both of them in different places when the
+// path matches the current URL.
 
-export default function RecursiveExample() {
-  return (
-    <Router>
-      <Switch>
-        <Route path="/:id">
-          <Person />
-        </Route>
-        <Route path="/">
-          <Redirect to="/0" />
-        </Route>
-      </Switch>
-    </Router>
-  );
-}
-
-function Person() {
-  let { url } = useRouteMatch();
-  let { id } = useParams();
-  let person = find(parseInt(id));
-
-  return (
-    <div>
-      <h3>{person.name}’s Friends</h3>
-
-      <ul>
-        {person.friends.map(id => (
-          <li key={id}>
-            <Link to={`${url}/${id}`}>{find(id).name}</Link>
-          </li>
-        ))}
-      </ul>
-
-      <Switch>
-        <Route path={`${url}/:id`}>
-          <Person />
-        </Route>
-      </Switch>
-    </div>
-  );
-}
-
-const PEEPS = [
-  { id: 0, name: "Michelle", friends: [1, 2, 3] },
-  { id: 1, name: "Sean", friends: [0, 3] },
-  { id: 2, name: "Kim", friends: [0, 1, 3] },
-  { id: 3, name: "David", friends: [1, 2] }
+// We are going to use this route config in 2
+// spots: once for the sidebar and once in the main
+// content section. All routes are in the same
+// order they would appear in a <Switch>.
+const routes = [
+  {
+    path: "/",
+    exact: true,
+    sidebar: () => <div>home!</div>,
+    main: () => <h2>Home</h2>
+  },
+  {
+    path: "/bubblegum",
+    sidebar: () => <div>bubblegum!</div>,
+    main: () => <h2>Bubblegum</h2>
+  },
+  {
+    path: "/shoelaces",
+    sidebar: () => <div>shoelaces!</div>,
+    main: () => <h2>Shoelaces</h2>
+  }
 ];
 
-function find(id) {
-  return PEEPS.find(p => p.id === id);
+export default function SidebarExample() {
+  return (
+    <Router>
+      <div style={{ display: "flex" }}>
+        <div
+          style={{
+            padding: "10px",
+            width: "40%",
+            background: "#f0f0f0"
+          }}
+        >
+          <ul style={{ listStyleType: "none", padding: 0 }}>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/bubblegum">Bubblegum</Link>
+            </li>
+            <li>
+              <Link to="/shoelaces">Shoelaces</Link>
+            </li>
+          </ul>
+
+          <Switch>
+            {routes.map((route, index) => (
+              // You can render a <Route> in as many places
+              // as you want in your app. It will render along
+              // with any other <Route>s that also match the URL.
+              // So, a sidebar or breadcrumbs or anything else
+              // that requires you to render multiple things
+              // in multiple places at the same URL is nothing
+              // more than multiple <Route>s.
+              <Route
+                key={index}
+                path={route.path}
+                exact={route.exact}
+                children={<route.sidebar />}
+              />
+            ))}
+          </Switch>
+        </div>
+
+        <div style={{ flex: 1, padding: "10px" }}>
+          <Switch>
+            {routes.map((route, index) => (
+              // Render more <Route>s with the same paths as
+              // above, but different components this time.
+              <Route
+                key={index}
+                path={route.path}
+                exact={route.exact}
+                children={<route.main />}
+              />
+            ))}
+          </Switch>
+        </div>
+      </div>
+    </Router>
+  );
 }
